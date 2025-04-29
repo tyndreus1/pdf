@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice Generator</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        /* Ana stil tanımlamaları */
+        body {
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            background-color: #f8f9fa;
+        }
+        
+        .container-fluid {
+            padding: 0;
+        }
+        
+        /* Header */
+        .app-header {
+            background-color: #2c3e50;
+            color: #fff;
+            padding: 1rem;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .logo {
+            margin: 0;
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+        
+		/* Tab stilleri */
+		.tab-pane {
+			display: none;
+		}
+
+		.tab-pane.active {
+			display: block;
+		}
+
+		/* Tab Görünürlük Düzeltmesi - 100% Çalışır */
+		.tab-pane {
+			display: none !important; /* Tüm tab panelleri gizli */
+		}
+
+		.tab-pane.active {
+			display: block !important; /* Sadece aktif olanı göster */
+		}
+
+		/* Tab butonları için stil */
+		.nav-link {
+			cursor: pointer;
+		}
+
+
+		/* Nav tabs buton stilleri */
+		#product-tabs .nav-link {
+			cursor: pointer;
+			color: #495057;
+			background-color: #fff;
+			border: 1px solid #dee2e6;
+			border-bottom: none;
+			border-top-left-radius: 0.25rem;
+			border-top-right-radius: 0.25rem;
+			padding: 0.5rem 1rem;
+			margin-bottom: -1px;
+		}
+
+		#product-tabs .nav-link.active {
+			color: #007bff;
+			border-color: #dee2e6 #dee2e6 #fff;
+			background-color: #fff;
+			border-bottom: 1px solid transparent;
+		}
+
+		#product-tabs .nav-link:hover {
+			border-color: #e9ecef #e9ecef #dee2e6;
+		}
+				
+		
+		
+		
+		
+        /* Ana içerik */
+        .main-content {
+            padding: 0 2rem 2rem 2rem;
+            min-height: calc(100vh - 180px);
+        }
+        
+        /* Alt navigasyon */
+        .footer-nav {
+            background-color: #f8f9fa;
+            border-top: 1px solid #e0e0e0;
+            padding: 1rem;
+            margin-top: 2rem;
+        }
+        
+        .progress-container {
+            margin-bottom: 1rem;
+        }
+        
+        .progress {
+            height: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .progress-text {
+            font-size: 0.9rem;
+            text-align: center;
+        }
+        
+        /* Adımlar */
+        .step-container {
+            display: none;
+        }
+        
+        .active-step {
+            display: block;
+        }
+        
+        h2 {
+            margin-bottom: 1.5rem;
+            color: #2c3e50;
+            font-weight: 700;
+        }
+        
+        /* Seçim kartları */
+        .selection-cards {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .selection-card {
+            flex: 1;
+            min-width: 250px;
+            border: 1px solid #e0e0e0;
+            padding: 1.5rem;
+            border-radius: 8px;
+            background-color: #fff;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-align: center;
+        }
+        
+        .selection-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+        /* Bootstrap Tab Panel Görünürlük Düzeltmesi */
+		.tab-pane {
+			display: none !important;
+		}
+
+		.tab-pane.active {
+			display: block !important;
+		}
+		
+        .selection-card.selected {
+            border-color: #3498db;
+            background-color: #ebf5fb;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: #3498db;
+        }
+        
+        .selection-card h3 {
+            margin-bottom: 0.5rem;
+            font-size: 1.2rem;
+        }
+        
+        .selection-card p {
+            color: #7f8c8d;
+            margin-bottom: 0;
+            font-size: 0.9rem;
+        }
+        
+        /* Sekme */
+        .selection-tabs {
+            margin-bottom: 2rem;
+        }
+        
+        .tab-buttons {
+            display: flex;
+            margin-bottom: 1rem;
+        }
+        
+        .tab-btn {
+            flex: 1;
+            padding: 0.75rem;
+            text-align: center;
+            background-color: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            border-bottom: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #7f8c8d;
+            font-weight: 600;
+        }
+        
+        .tab-btn:first-child {
+            border-top-left-radius: 8px;
+        }
+        
+        .tab-btn:last-child {
+            border-top-right-radius: 8px;
+        }
+        
+        .tab-btn.active {
+            background-color: #fff;
+            color: #3498db;
+        }
+        
+        .tab-content {
+            display: none;
+            padding: 1.5rem;
+            background-color: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 0 0 8px 8px;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* Müşteri listesi */
+        .customer-list-container {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .customer-item {
+            padding: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .customer-item:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .customer-item.selected {
+            border-color: #3498db;
+            background-color: #ebf5fb;
+        }
+        
+        .customer-name {
+            font-weight: 600;
+        }
+        
+        .customer-details {
+            font-size: 0.85rem;
+            color: #7f8c8d;
+        }
+        
+        /* Ürün listesi düzeni */
+        .product-list-container {
+            max-height: 500px;
+            overflow-y: auto;
+            padding: 0.5rem;
+        }
+
+        .product-item {
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .product-item:hover {
+            border-color: #3498db;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transform: translateY(-3px);
+        }
+
+        .product-item.selected {
+            border-color: #3498db;
+            background-color: #ebf5fb;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .product-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+            color: #2c3e50;
+        }
+
+        .product-description {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+
+        .product-category {
+            display: inline-block;
+            background: #f8f9fa;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            color: #2c3e50;
+            font-weight: 500;
+        }
+
+        .product-category.rainbo {
+            background-color: #ffecb3;
+            color: #ff8f00;
+        }
+
+        .product-category.laser {
+            background-color: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .product-category.combine {
+            background-color: #e8f5e9;
+            color: #388e3c;
+        }
+
+        .product-category.mould {
+            background-color: #f3e5f5;
+            color: #7b1fa2;
+        }
+
+        .product-category.other {
+            background-color: #eeeeee;
+            color: #616161;
+        }
+        
+        /* Önizleme */
+        .invoice-preview-container {
+            background-color: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        .invoice-preview {
+            position: relative;
+            width: 210mm;
+            height: 297mm;
+            margin: 0 auto;
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            background-color: white;
+            color: black;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+            transform: scale(0.8);
+            transform-origin: top center;
+        }
+        
+        .company-logo {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 220mm;
+            height: 60mm;
+        }
+        
+        .company-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            object-position: left top;
+        }
+        
+        .invoice-title {
+            position: absolute;
+            top: 30mm;
+            left: 135mm;
+            margin: 0;
+            font-size: 20pt;
+            color: #DC143C;
+            font-weight: bold;
+        }
+        
+        .invoice-info {
+            position: absolute;
+            top: 50mm;
+            left: 140mm;
+            font-size: 11pt;
+        }
+        
+        .invoice-date {
+            position: absolute;
+            top: 60mm;
+            left: 140mm;
+            font-size: 11pt;
+        }
+        
+        .customer-section {
+            position: absolute;
+            top: 50mm;
+            left: 10mm;
+        }
+        
+        .customer-section-title {
+            color: #DC143C;
+            font-size: 12pt;
+            margin-bottom: 5mm;
+        }
+        
+        .customer-info {
+            font-size: 10pt;
+            line-height: 5mm;
+        }
+        
+        .products-table {
+            position: absolute;
+            top: 82mm;
+            left: 5mm;
+            width: 200mm;
+        }
+        
+        .terms-section {
+            position: absolute;
+            top: 237mm;
+            left: 8mm;
+            width: 80mm;
+        }
+        
+        .company-section {
+            position: absolute;
+            top: 237mm;
+            left: 110mm;
+            width: 110mm;
+        }
+        
+        .section-title {
+            color: #DC143C;
+            font-size: 12pt;
+            font-weight: bold;
+            margin-bottom: 7mm;
+        }
+        
+        .footer-text {
+            position: absolute;
+            bottom: 10mm;
+            width: 100%;
+            text-align: center;
+            font-size: 8pt;
+            color: #777;
+        }
+        
+        /* Tablo işlemleri */
+        .table-action {
+            text-align: center;
+        }
+        
+        .btn-remove {
+            background: none;
+            border: none;
+            color: #e74c3c;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-remove:hover {
+            transform: scale(1.2);
+        }
+        
+        /* Responsive ayarları */
+        @media (max-width: 992px) {
+            .selection-cards {
+                flex-direction: column;
+            }
+            
+            .invoice-preview {
+                transform: scale(0.6);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <!-- Header -->
+        <div class="app-header">
+            <h1 class="logo">Invoice Generator</h1>
+            <div class="mt-2">
+                <a href="veriyonetimi.html" class="btn btn-outline-light btn-sm" target="_blank">
+                    <i class="fas fa-database me-2"></i>Veri Yönetimi
+                </a>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="container">
+            <div class="main-content">
+                <!-- Step 1: Invoice Type -->
+                <div id="step-1" class="step-container active-step">
+                    <h2>Select Invoice Type</h2>
+                    <div class="selection-cards">
+                        <div class="selection-card" data-value="invoice">
+                            <div class="card-icon"><i class="fas fa-file-invoice"></i></div>
+                            <h3>Invoice</h3>
+                            <p>Standard invoice for completed transactions</p>
+                        </div>
+                        <div class="selection-card" data-value="proforma">
+                            <div class="card-icon"><i class="fas fa-file-contract"></i></div>
+                            <h3>Proforma Invoice</h3>
+                            <p>Preliminary bill of sale sent before a completed transaction</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Step 2: Currency -->
+                <div id="step-2" class="step-container">
+                    <h2>Select Currency</h2>
+                    <div class="selection-cards">
+                        <div class="selection-card" data-value="USD">
+                            <div class="card-icon"><i class="fas fa-dollar-sign"></i></div>
+                            <h3>US Dollar</h3>
+                            <p>USD ($)</p>
+                        </div>
+                        <div class="selection-card" data-value="EUR">
+                            <div class="card-icon"><i class="fas fa-euro-sign"></i></div>
+                            <h3>Euro</h3>
+                            <p>EUR (€)</p>
+                        </div>
+                        <div class="selection-card" data-value="TL">
+                            <div class="card-icon"><i class="fas fa-lira-sign"></i></div>
+                            <h3>Turkish Lira</h3>
+                            <p>TL (₺)</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Step 3: Customer -->
+                <div id="step-3" class="step-container">
+                    <h2>Select Customer</h2>
+                    <div class="selection-tabs">
+                        <div class="tab-buttons">
+                            <button class="tab-btn active" data-tab="existing-customer">Existing Customer</button>
+                            <button class="tab-btn" data-tab="new-customer">New Customer</button>
+                        </div>
+                        <div class="tab-content active" id="existing-customer">
+                            <div class="input-group mb-3">
+                                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                <input type="text" class="form-control" id="customer-search" placeholder="Search by name, email or phone...">
+                            </div>
+                            <div class="customer-list-container">
+                                <div id="customer-list"></div>
+                            </div>
+                        </div>
+                        <div class="tab-content" id="new-customer">
+                            <form id="new-customer-form">
+                                <div class="mb-3">
+                                    <label for="customer-name" class="form-label">Name</label>
+                                    <input type="text" class="form-control" id="customer-name" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="customer-address" class="form-label">Address</label>
+                                    <textarea class="form-control" id="customer-address" rows="2" required></textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="customer-email" class="form-label">Email</label>
+                                    <input type="email" class="form-control" id="customer-email">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="customer-phone" class="form-label">Phone</label>
+                                    <input type="text" class="form-control" id="customer-phone">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="customer-notes" class="form-label">Notes</label>
+                                    <textarea class="form-control" id="customer-notes" rows="2"></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Add Customer</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Step 4: Products -->
+                <div id="step-4" class="step-container">
+                    <h2>Select Products</h2>
+                    
+                    <!-- Kategori Seçimi -->
+                    <ul class="nav nav-tabs mb-3" id="productCategoryTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="all-tab" data-bs-toggle="tab" data-bs-target="#all-products" type="button" role="tab" aria-selected="true">
+                                All Products
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="rainbo-tab" data-bs-toggle="tab" data-bs-target="#rainbo-products" type="button" role="tab" aria-selected="false">
+                                Rainbo Series
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="laser-tab" data-bs-toggle="tab" data-bs-target="#laser-products" type="button" role="tab" aria-selected="false">
+                                Laser Series
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="combine-tab" data-bs-toggle="tab" data-bs-target="#combine-products" type="button" role="tab" aria-selected="false">
+                                Combine Series
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="mould-tab" data-bs-toggle="tab" data-bs-target="#mould-products" type="button" role="tab" aria-selected="false">
+                                Mould
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="other-tab" data-bs-toggle="tab" data-bs-target="#other-products" type="button" role="tab" aria-selected="false">
+                                Other
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="manual-tab" data-bs-toggle="tab" data-bs-target="#manual-add" type="button" role="tab" aria-selected="false">
+                                Manual Add
+                            </button>
+                        </li>
+                    </ul>
+                    
+                    <div class="tab-content" id="productCategoryTabContent">
+                        <!-- Tüm Ürünler -->
+                        <div class="tab-pane fade show active" id="all-products" role="tabpanel">
+                            <div class="input-group mb-3">
+                                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                <input type="text" class="form-control" id="product-search" placeholder="Search products...">
+                            </div>
+                            <div class="product-list-container">
+                                <div id="all-product-list" class="row"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Rainbo Series -->
+                        <div class="tab-pane fade" id="rainbo-products" role="tabpanel">
+                            <div class="product-list-container">
+                                <div id="rainbo-product-list" class="row"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Laser Series -->
+                        <div class="tab-pane fade" id="laser-products" role="tabpanel">
+                            <div class="product-list-container">
+                                <div id="laser-product-list" class="row"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Combine Series -->
+                        <div class="tab-pane fade" id="combine-products" role="tabpanel">
+                            <div class="product-list-container">
+                                <div id="combine-product-list" class="row"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Mould -->
+                        <div class="tab-pane fade" id="mould-products" role="tabpanel">
+                            <div class="product-list-container">
+                                <div id="mould-product-list" class="row"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Other -->
+                        <div class="tab-pane fade" id="other-products" role="tabpanel">
+                            <div class="product-list-container">
+                                <div id="other-product-list" class="row"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Manual Ürün Ekleme -->
+                        <div class="tab-pane fade" id="manual-add" role="tabpanel">
+                            <form id="manual-product-form">
+                                <div class="mb-3">
+                                    <label for="product-name" class="form-label">Product Name</label>
+                                    <input type="text" class="form-control" id="product-name" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="product-quantity" class="form-label">Quantity</label>
+                                    <input type="number" class="form-control" id="product-quantity" min="1" value="1" required>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Add Product</button>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <h3 class="mt-4">Selected Products</h3>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Quantity</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="selected-products-tbody">
+                                <tr class="no-products-row">
+                                    <td colspan="3" class="text-center">No products selected yet</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Step 5: Price -->
+                <div id="step-5" class="step-container">
+                    <h2>Set Prices</h2>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Quantity</th>
+                                    <th>Unit Price</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody id="price-table-tbody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Step 6: Discount -->
+                <div id="step-6" class="step-container">
+                    <h2>Apply Discount</h2>
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <p class="mb-1">Subtotal: <span id="currency-symbol-1"></span><span id="subtotal">0.00</span></p>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Do you want to apply discount?</label>
+                        <div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="discount-apply" id="discount-no" value="no" checked>
+                                <label class="form-check-label" for="discount-no">No</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="discount-apply" id="discount-yes" value="yes">
+                                <label class="form-check-label" for="discount-yes">Yes</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="discount-fields" class="d-none">
+                        <div class="mb-3">
+                            <label class="form-label">Discount Type</label>
+                            <div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="discount-type" id="discount-percentage" value="percentage" checked>
+                                    <label class="form-check-label" for="discount-percentage">Percentage</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="discount-type" id="discount-value" value="value">
+                                    <label class="form-check-label" for="discount-value">Fixed Amount</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="discount-amount" class="form-label">Discount Amount</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="discount-amount" min="0" step="0.01">
+                                <span class="input-group-text" id="discount-symbol">%</span>
+                            </div>
+                        </div>
+                        
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <p class="mb-1 text-success">Discount: <span id="currency-symbol-2"></span><span id="discount-total">0.00</span></p>
+                                <p class="mb-1">Total after discount: <span id="currency-symbol-3"></span><span id="total-after-discount">0.00</span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Step 7: Advance Payment -->
+                <div id="step-7" class="step-container">
+                    <h2>Advance Payment</h2>
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <p class="mb-1">Subtotal: <span id="currency-symbol-4"></span><span id="ap-subtotal">0.00</span></p>
+                            <p class="mb-1 text-success discount-row d-none">Discount: <span id="currency-symbol-5"></span><span id="ap-discount-total">0.00</span></p>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Has customer made an advance payment?</label>
+                        <div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="advance-apply" id="advance-no" value="no" checked>
+                                <label class="form-check-label" for="advance-no">No</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="advance-apply" id="advance-yes" value="yes">
+                                <label class="form-check-label" for="advance-yes">Yes</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="advance-fields" class="d-none">
+                        <div class="mb-3">
+                            <label for="advance-amount" class="form-label">Advance Payment Amount</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="advance-amount" min="0" step="0.01">
+                                <span class="input-group-text" id="advance-currency-symbol"></span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card mt-4">
+                        <div class="card-body">
+                            <p class="mb-1 text-success advance-row d-none">Advance Payment: <span id="currency-symbol-6"></span><span id="advance-total">0.00</span></p>
+                            <p class="mb-1 fw-bold">GRAND TOTAL: <span id="currency-symbol-7"></span><span id="grand-total">0.00</span></p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Step 8: Additional Information -->
+                <div id="step-8" class="step-container">
+                    <h2>Additional Information</h2>
+                    
+                    <div class="mb-3">
+                        <label for="warranty-period" class="form-label">Warranty Period</label>
+                        <select class="form-select" id="warranty-period">
+                            <option value="1 year">1 Year</option>
+                            <option value="2 years">2 Years</option>
+                            <option value="3 years">3 Years</option>
+                            <option value="6 months">6 Months</option>
+                            <option value="no warranty">No Warranty</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="shipping-included" class="form-label">Shipping</label>
+                        <select class="form-select" id="shipping-included">
+                            <option value="included">Included in price</option>
+                            <option value="not-included">Not included</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="payment-terms" class="form-label">Payment Terms</label>
+                        <input type="text" class="form-control" id="payment-terms" placeholder="e.g. 50% advance payment, 50% before delivery">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="delivery-terms" class="form-label">Delivery Terms</label>
+                        <input type="text" class="form-control" id="delivery-terms" placeholder="e.g. Ex Works, FOB, etc.">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="extra-info" class="form-label">Additional Notes</label>
+                        <textarea class="form-control" id="extra-info" rows="3" placeholder="Any additional notes or information..."></textarea>
+                    </div>
+                </div>
+                
+                <!-- Step 9: Preview and Submit -->
+                <div id="step-9" class="step-container">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h2>Preview Invoice</h2>
+                        <div>
+                            <button id="edit-btn" class="btn btn-outline-primary me-2">Edit</button>
+                            <button id="save-btn" class="btn btn-primary">Finalize</button>
+                        </div>
+                    </div>
+                    
+                    <div class="invoice-preview-container">
+                        <div id="invoice-preview" class="invoice-preview"></div>
+                    </div>
+                    
+                    <div class="text-center mt-4">
+                        <button id="generate-pdf-btn" class="btn btn-lg btn-success">
+                            <i class="fas fa-file-pdf me-2"></i> Generate PDF
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Footer Navigation -->
+            <div class="footer-nav">
+                <div class="progress-container">
+                    <div class="progress">
+                        <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+                    </div>
+                    <p class="progress-text">Step <span class="current-step">1</span>/<span class="total-steps">9</span></p>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <button id="prev-btn" class="btn btn-outline-primary" disabled>
+                        <i class="fas fa-arrow-left me-2"></i>Previous
+                    </button>
+                    <button id="next-btn" class="btn btn-primary">
+                        Next<i class="fas fa-arrow-right ms-2"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quantity Modal -->
+    <div class="modal fade" id="quantity-modal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Select Quantity</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Product: <span id="modal-product-name"></span></p>
+                    <div class="mb-3">
+                        <label for="modal-quantity" class="form-label">Quantity</label>
+                        <input type="number" class="form-control" id="modal-quantity" min="1" value="1">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="add-to-invoice">Add to Invoice</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Success Modal -->
+    <div class="modal fade" id="success-modal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Invoice Created</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="text-center">
+                        <i class="fas fa-check-circle text-success" style="font-size: 3rem;"></i>
+                        <h4 class="mt-3">Success!</h4>
+                        <p>The invoice has been created successfully.</p>
+                        <p>Invoice number: <strong id="invoice-number"></strong></p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="download-pdf">
+                        <i class="fas fa-download me-2"></i> Download PDF
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+	
+
+	
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="js/database.js"></script>
+    <script src="js/pdfgenerator.js"></script>
+    <script src="js/app.js"></script>
+	
+			<script>
+	$(document).ready(function() {
+		// Tab tıklamalarını dinle
+		$('[data-bs-toggle="tab"], [data-bs-tab], [role="tab"]').click(function(e) {
+			e.preventDefault();
+			
+			// Tüm tab'ları pasifleştir
+			$('.tab-pane').hide().removeClass('active');
+			$('[data-bs-toggle="tab"], [data-bs-tab], [role="tab"]').removeClass('active');
+			
+			// Hedef ID'sini al
+			var target = $(this).attr('data-bs-target') || $(this).attr('href') || '#' + $(this).attr('data-bs-tab');
+			
+			// Hedef tab'ı aktifleştir
+			$(target).show().addClass('active');
+			$(this).addClass('active');
+		});
+		
+		// İlk tab'ı aktif yap
+		$('#all-tab, [data-bs-tab="all-products"]').click();
+	});
+	</script>
+	
+	
+	
+</body>
+</html>

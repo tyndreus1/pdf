@@ -1,0 +1,1292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Veri Yönetimi - Invoice Generator</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            background-color: #f8f9fa;
+            padding-top: 1rem;
+        }
+        
+        .app-header {
+            background-color: #2c3e50;
+            color: #fff;
+            padding: 1rem;
+            text-align: center;
+            margin-bottom: 2rem;
+            border-radius: 8px;
+        }
+        
+        .logo {
+            margin: 0;
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+        
+        .section-title {
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #e0e0e0;
+            margin-bottom: 1rem;
+        }
+        
+        .action-buttons {
+            position: sticky;
+            bottom: 0;
+            background-color: #f8f9fa;
+            padding: 1rem;
+            border-top: 1px solid #e0e0e0;
+            margin-top: 2rem;
+        }
+        
+        .table-container {
+            overflow-x: auto;
+            margin-bottom: 2rem;
+        }
+        
+        /* Tablo stilleri */
+        .table {
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .table thead th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+        }
+        
+        /* Form stilleri */
+        .form-wrapper {
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+        
+        .form-title {
+            margin-bottom: 1.5rem;
+            color: #2c3e50;
+            font-weight: 600;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        /* Kategori badge renkleri */
+        .bg-purple {
+            background-color: #9c27b0;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="app-header">
+            <h1 class="logo">Veri Yönetimi</h1>
+            <p class="mb-0">Invoice Generator için veri yönetimi paneli</p>
+        </div>
+        
+        <!-- Veritabanı Durum Göstergesi -->
+        <div id="db-status" class="alert alert-info mb-4 text-center">
+            <i class="fas fa-spinner fa-spin me-2"></i> Veritabanı yükleniyor...
+        </div>
+        
+        <!-- Ana İçerik -->
+        <div class="row">
+            <div class="col-md-3">
+                <!-- Sol Menü -->
+                <div class="list-group mb-4 sticky-top" style="top: 1rem;">
+                    <a href="#customers-section" class="list-group-item list-group-item-action active" id="customers-tab">
+                        <i class="fas fa-users me-2"></i>Müşteriler
+                    </a>
+                    <a href="#products-section" class="list-group-item list-group-item-action" id="products-tab">
+                        <i class="fas fa-box me-2"></i>Ürünler
+                    </a>
+                    <a href="#backup-section" class="list-group-item list-group-item-action" id="backup-tab">
+                        <i class="fas fa-save me-2"></i>Yedekleme
+                    </a>
+                    <div class="list-group-item list-group-item-secondary">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div><i class="fas fa-database me-2"></i>Veri Durumu</div>
+                            <span id="data-counter" class="badge bg-primary">Yükleniyor...</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card mb-4">
+                    <div class="card-header">Hızlı İşlemler</div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <button id="add-new-customer-btn" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-plus me-2"></i>Yeni Müşteri
+                            </button>
+                            <button id="add-new-product-btn" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-plus me-2"></i>Yeni Ürün
+                            </button>
+                            <button id="export-all-btn" class="btn btn-outline-success btn-sm">
+                                <i class="fas fa-download me-2"></i>Verileri İndir
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">Bağlantılar</div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <a href="index.html" class="btn btn-secondary btn-sm">
+                                <i class="fas fa-arrow-left me-2"></i>Fatura Sayfasına Dön
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-9">
+                <!-- Müşteriler Bölümü -->
+                <div id="customers-section" class="mb-5">
+                    <h2 class="section-title">
+                        <i class="fas fa-users me-2"></i>Müşteriler
+                        <button id="add-customer-btn" class="btn btn-success btn-sm float-end">
+                            <i class="fas fa-plus"></i> Yeni Müşteri
+                        </button>
+                    </h2>
+                    
+                    <div class="table-container">
+                        <table class="table table-bordered table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width: 60px">ID</th>
+                                    <th>İsim</th>
+                                    <th>Adres</th>
+                                    <th>Email</th>
+                                    <th>Telefon</th>
+                                    <th style="width: 140px">İşlemler</th>
+                                </tr>
+                            </thead>
+                            <tbody id="customer-table-body">
+                                <tr>
+                                    <td colspan="6" class="text-center">Veri yükleniyor...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Ürünler Bölümü -->
+                <div id="products-section" class="mb-5">
+                    <h2 class="section-title">
+                        <i class="fas fa-box me-2"></i>Ürünler
+                        <button id="add-product-btn" class="btn btn-success btn-sm float-end">
+                            <i class="fas fa-plus"></i> Yeni Ürün
+                        </button>
+                    </h2>
+                    
+                    <div class="table-container">
+                        <table class="table table-bordered table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width: 60px">ID</th>
+                                    <th>Ürün Adı</th>
+                                    <th>Açıklama</th>
+                                    <th>Resim URL</th>
+                                    <th>Kategori</th>
+                                    <th style="width: 140px">İşlemler</th>
+                                </tr>
+                            </thead>
+                            <tbody id="product-table-body">
+                                <tr>
+                                    <td colspan="6" class="text-center">Veri yükleniyor...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Yedekleme Bölümü -->
+                <div id="backup-section" class="mb-5">
+                    <h2 class="section-title">
+                        <i class="fas fa-save me-2"></i>Yedekleme ve Geri Yükleme
+                    </h2>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card mb-4">
+                                <div class="card-header">
+                                    <i class="fas fa-download me-2"></i>Veri Yedekleme
+                                </div>
+                                <div class="card-body">
+                                    <p>Tüm veritabanı verilerinizi JSON formatında dışa aktarın.</p>
+                                    <button id="export-all-data" class="btn btn-primary">
+                                        <i class="fas fa-download me-2"></i>Tüm Verileri İndir
+                                    </button>
+                                    
+                                    <hr>
+                                    
+                                    <h6>Özel Dışa Aktarma</h6>
+                                    <div class="d-flex gap-2">
+                                        <button id="export-customers" class="btn btn-outline-secondary btn-sm">
+                                            <i class="fas fa-users me-1"></i>Müşteriler
+                                        </button>
+                                        <button id="export-products" class="btn btn-outline-secondary btn-sm">
+                                            <i class="fas fa-box me-1"></i>Ürünler
+                                        </button>
+                                        <button id="export-invoices" class="btn btn-outline-secondary btn-sm">
+                                            <i class="fas fa-file-invoice me-1"></i>Faturalar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="card mb-4">
+                                <div class="card-header">
+                                    <i class="fas fa-upload me-2"></i>Veri Geri Yükleme
+                                </div>
+                                <div class="card-body">
+                                    <p>Dışa aktarılan bir yedekten verileri geri yükleyin.</p>
+                                    <div class="mb-3">
+                                        <label for="import-file" class="form-label">JSON Dosyası Seçin</label>
+                                        <input class="form-control" type="file" id="import-file" accept=".json">
+                                    </div>
+                                    <button id="import-data" class="btn btn-warning" disabled>
+                                        <i class="fas fa-upload me-2"></i>Verileri Yükle
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Veri Temizleme -->
+                    <div class="card border-danger">
+                        <div class="card-header bg-danger text-white">
+                            <i class="fas fa-exclamation-triangle me-2"></i>Tehlikeli Bölge
+                        </div>
+                        <div class="card-body">
+                            <h5 class="card-title">Veri Temizleme</h5>
+                            <p class="card-text">Bu işlemler geri alınamaz! Verileri temizlemeden önce yedek aldığınızdan emin olun.</p>
+                            
+                            <div class="d-flex gap-2">
+                                <button id="clear-customers" class="btn btn-outline-danger btn-sm">
+                                    Tüm Müşterileri Sil
+                                </button>
+                                <button id="clear-products" class="btn btn-outline-danger btn-sm">
+                                    Tüm Ürünleri Sil
+                                </button>
+                                <button id="clear-all" class="btn btn-danger btn-sm">
+                                    Tüm Verileri Temizle
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Müşteri Düzenleme Modalı -->
+    <div class="modal fade" id="customer-modal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="customer-modal-title">Müşteri Ekle/Düzenle</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="customer-form">
+                        <input type="hidden" id="customer-id">
+                        <div class="mb-3">
+                            <label for="customer-name" class="form-label">İsim</label>
+                            <input type="text" class="form-control" id="customer-name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="customer-address" class="form-label">Adres</label>
+                            <textarea class="form-control" id="customer-address" rows="3" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="customer-email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="customer-email">
+                        </div>
+                        <div class="mb-3">
+                            <label for="customer-phone" class="form-label">Telefon</label>
+                            <input type="text" class="form-control" id="customer-phone">
+                        </div>
+                        <div class="mb-3">
+                            <label for="customer-notes" class="form-label">Notlar</label>
+                            <textarea class="form-control" id="customer-notes" rows="2"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                    <button type="button" class="btn btn-primary" id="save-customer">Kaydet</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Ürün Düzenleme Modalı -->
+    <div class="modal fade" id="product-modal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="product-modal-title">Ürün Ekle/Düzenle</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="product-form">
+                        <input type="hidden" id="product-id">
+                        <div class="mb-3">
+                            <label for="product-name" class="form-label">Ürün Adı</label>
+                            <input type="text" class="form-control" id="product-name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="product-description" class="form-label">Açıklama</label>
+                            <textarea class="form-control" id="product-description" rows="3" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="product-category" class="form-label">Kategori</label>
+                            <select class="form-select" id="product-category" required>
+                                <option value="Rainbo Series">Rainbo Series</option>
+                                <option value="Laser Series">Laser Series</option>
+                                <option value="Combine Series">Combine Series</option>
+                                <option value="Mould">Mould</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="product-image" class="form-label">Resim URL (Opsiyonel)</label>
+                            <input type="text" class="form-control" id="product-image" value="images/product.jpg">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                    <button type="button" class="btn btn-primary" id="save-product">Kaydet</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Onay Modalı -->
+    <div class="modal fade" id="confirm-modal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirm-modal-title">Onay</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="confirm-modal-body">
+                    Bu işlemi onaylıyor musunuz?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                    <button type="button" class="btn btn-danger" id="confirm-action">Onayla</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/database.js"></script>
+	<script>
+		document.addEventListener('DOMContentLoaded', function() {
+			console.log("Veri yönetimi sayfası yükleniyor...");
+			
+			// Bu script InvoiceDB'nin yüklenip yüklenmediğini kontrol eder
+			window.addEventListener('load', function() {
+				checkDbLoaded();
+			});
+			
+			// Veritabanı yükleme kontrolü
+			function checkDbLoaded() {
+				const dbStatus = document.getElementById('db-status');
+				
+				// Önceki database.js yükleme kontrolü
+				if (typeof InvoiceDB === 'undefined') {
+					console.error("HATA: InvoiceDB bulunamadı! database.js yüklenmemiş olabilir.");
+					dbStatus.className = 'alert alert-danger mb-4 text-center';
+					dbStatus.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i> Veritabanı bağlantısı başarısız! <button id="load-db-btn" class="btn btn-sm btn-danger ms-3">Tekrar Dene</button>';
+					
+					// Database.js dosyasını yüklemeyi dene
+					const loadDbBtn = document.getElementById('load-db-btn');
+					if (loadDbBtn) {
+						loadDbBtn.addEventListener('click', function() {
+							loadDatabaseScript();
+						});
+					}
+					
+					// Otomatik olarak database.js dosyasını yükleme
+					setTimeout(() => {
+						loadDatabaseScript();
+					}, 1000);
+					
+					return;
+				}
+				
+				// InvoiceDB yüklendi, şimdi initalize edildi mi kontrol et
+				try {
+					const customers = InvoiceDB.customers.getAll();
+					const products = InvoiceDB.products.getAll();
+					
+					// Başarılı
+					dbStatus.className = 'alert alert-success mb-4 text-center';
+					dbStatus.innerHTML = '<i class="fas fa-check-circle me-2"></i> Veritabanı başarıyla yüklendi!';
+					
+					// Tabloları ve diğer işlevleri yükle
+					initializeApp();
+				} catch (error) {
+					console.error("Veritabanı yüklendi ancak veriler okunamadı:", error);
+					dbStatus.className = 'alert alert-warning mb-4 text-center';
+					dbStatus.innerHTML = `<i class="fas fa-exclamation-triangle me-2"></i> Veritabanı yüklendi ancak veriler okunamadı: ${error.message} <button id="init-db-btn" class="btn btn-sm btn-warning ms-3">InvoiceDB.init()</button>`;
+					
+					// InvoiceDB.init() fonksiyonunu çağır
+					const initDbBtn = document.getElementById('init-db-btn');
+					if (initDbBtn) {
+						initDbBtn.addEventListener('click', function() {
+							try {
+								if (typeof InvoiceDB.customers.init === 'function') {
+									InvoiceDB.customers.init();
+									InvoiceDB.products.init();
+									if (InvoiceDB.invoices && typeof InvoiceDB.invoices.init === 'function') {
+										InvoiceDB.invoices.init();
+									}
+									checkDbLoaded(); // Tekrar kontrol et
+								} else {
+									throw new Error("InvoiceDB.init() fonksiyonu bulunamadı");
+								}
+							} catch (err) {
+								console.error("InvoiceDB.init() çağrısında hata:", err);
+								dbStatus.innerHTML = `<i class="fas fa-times-circle me-2"></i> Hata: ${err.message}`;
+							}
+						});
+					}
+				}
+			}
+			
+			// database.js dosyasını dinamik olarak yükle
+			function loadDatabaseScript() {
+				const dbStatus = document.getElementById('db-status');
+				dbStatus.className = 'alert alert-info mb-4 text-center';
+				dbStatus.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Veritabanı yükleniyor, lütfen bekleyin...';
+				
+				const script = document.createElement('script');
+				script.src = 'js/database.js';
+				script.onload = function() {
+					console.log("database.js başarıyla yüklendi!");
+					
+					// InvoiceDB'yi initialize et
+					if (typeof InvoiceDB !== 'undefined' && InvoiceDB.customers && typeof InvoiceDB.customers.init === 'function') {
+						try {
+							InvoiceDB.customers.init();
+							InvoiceDB.products.init();
+							if (InvoiceDB.invoices && typeof InvoiceDB.invoices.init === 'function') {
+								InvoiceDB.invoices.init();
+							}
+							
+							// Kontrolü tekrarla
+							setTimeout(() => {
+								checkDbLoaded();
+							}, 500);
+						} catch (e) {
+							console.error("InvoiceDB.init() çağrısında hata:", e);
+							dbStatus.className = 'alert alert-danger mb-4 text-center';
+							dbStatus.innerHTML = `<i class="fas fa-times-circle me-2"></i> InvoiceDB.init() hatası: ${e.message} <button onclick="location.reload()" class="btn btn-sm btn-danger ms-3">Sayfayı Yenile</button>`;
+						}
+					} else {
+						console.error("InvoiceDB yüklendi ancak init() metodu bulunamadı");
+						dbStatus.className = 'alert alert-danger mb-4 text-center';
+						dbStatus.innerHTML = '<i class="fas fa-times-circle me-2"></i> InvoiceDB yüklendi ancak init() metodu bulunamadı <button onclick="location.reload()" class="btn btn-sm btn-danger ms-3">Sayfayı Yenile</button>';
+					}
+				};
+				
+				script.onerror = function() {
+					console.error("database.js dosyası yüklenemedi!");
+					dbStatus.className = 'alert alert-danger mb-4 text-center';
+					dbStatus.innerHTML = '<i class="fas fa-times-circle me-2"></i> database.js yüklenemedi! <button onclick="location.reload()" class="btn btn-sm btn-danger ms-3">Sayfayı Yenile</button>';
+				};
+				
+				document.body.appendChild(script);
+			}
+			
+			// Uygulama başlatma
+			function initializeApp() {
+				console.log("Veri yönetimi uygulaması başlatılıyor...");
+				
+				// DOM elementleri
+				const customerTableBody = document.getElementById('customer-table-body');
+				const productTableBody = document.getElementById('product-table-body');
+				const dataCounter = document.getElementById('data-counter');
+				
+				// Modaller
+				const customerModalElement = document.getElementById('customer-modal');
+				const productModalElement = document.getElementById('product-modal');
+				const confirmModalElement = document.getElementById('confirm-modal');
+				
+				let customerModal, productModal, confirmModal;
+				
+				if (customerModalElement) customerModal = new bootstrap.Modal(customerModalElement);
+				if (productModalElement) productModal = new bootstrap.Modal(productModalElement);
+				if (confirmModalElement) confirmModal = new bootstrap.Modal(confirmModalElement);
+				
+				// Butonlar ve form elementleri
+				const addCustomerBtn = document.getElementById('add-customer-btn');
+				const addProductBtn = document.getElementById('add-product-btn');
+				const addNewCustomerBtn = document.getElementById('add-new-customer-btn');
+				const addNewProductBtn = document.getElementById('add-new-product-btn');
+				const saveCustomerBtn = document.getElementById('save-customer');
+				const saveProductBtn = document.getElementById('save-product');
+				const confirmActionBtn = document.getElementById('confirm-action');
+				
+				// Yedekleme butonları
+				const exportAllBtn = document.getElementById('export-all-data');
+				const exportAllBtn2 = document.getElementById('export-all-btn');
+				const exportCustomersBtn = document.getElementById('export-customers');
+				const exportProductsBtn = document.getElementById('export-products');
+				const exportInvoicesBtn = document.getElementById('export-invoices');
+				const importFileInput = document.getElementById('import-file');
+				const importDataBtn = document.getElementById('import-data');
+				
+				// Temizleme butonları
+				const clearCustomersBtn = document.getElementById('clear-customers');
+				const clearProductsBtn = document.getElementById('clear-products');
+				const clearAllBtn = document.getElementById('clear-all');
+				
+				// Form elementleri
+				const customerForm = document.getElementById('customer-form');
+				const customerIdInput = document.getElementById('customer-id');
+				const customerNameInput = document.getElementById('customer-name');
+				const customerAddressInput = document.getElementById('customer-address');
+				const customerEmailInput = document.getElementById('customer-email');
+				const customerPhoneInput = document.getElementById('customer-phone');
+				const customerNotesInput = document.getElementById('customer-notes');
+				
+				const productForm = document.getElementById('product-form');
+				const productIdInput = document.getElementById('product-id');
+				const productNameInput = document.getElementById('product-name');
+				const productDescInput = document.getElementById('product-description');
+				const productCategoryInput = document.getElementById('product-category');
+				const productImageInput = document.getElementById('product-image');
+				
+				// Tab kontrolü
+				const tabs = document.querySelectorAll('.list-group-item');
+				tabs.forEach(tab => {
+					tab.addEventListener('click', function(e) {
+						tabs.forEach(t => t.classList.remove('active'));
+						this.classList.add('active');
+					});
+				});
+				
+				// Veri sayacını güncelleme
+				function updateDataCounter() {
+					const customerCount = InvoiceDB.customers.getAll().length;
+					const productCount = InvoiceDB.products.getAll().length;
+					
+					dataCounter.textContent = `${customerCount} Müş, ${productCount} Ürün`;
+				}
+				
+				// Müşteri tablosunu güncelleme
+				function refreshCustomerTable() {
+					console.log("Müşteri tablosu güncelleniyor...");
+					
+					if (!customerTableBody) {
+						console.error("Müşteri tablosu bulunamadı!");
+						return;
+					}
+					
+					customerTableBody.innerHTML = '';
+					
+					try {
+						const customers = InvoiceDB.customers.getAll();
+						console.log(`${customers.length} müşteri bulundu.`);
+						
+						if (customers.length === 0) {
+							customerTableBody.innerHTML = `<tr><td colspan="6" class="text-center">Henüz müşteri eklenmemiş.</td></tr>`;
+							return;
+						}
+						
+						customers.forEach(customer => {
+							const row = document.createElement('tr');
+							row.innerHTML = `
+								<td>${customer.id}</td>
+								<td>${escapeHtml(customer.name || '')}</td>
+								<td>${escapeHtml(customer.address || '')}</td>
+								<td>${escapeHtml(customer.email || '')}</td>
+								<td>${escapeHtml(customer.phone || '')}</td>
+								<td>
+									<button class="btn btn-sm btn-primary edit-customer-btn" data-id="${customer.id}">
+										<i class="fas fa-edit"></i>
+									</button>
+									<button class="btn btn-sm btn-danger delete-customer-btn ms-2" data-id="${customer.id}">
+										<i class="fas fa-trash"></i>
+									</button>
+								</td>
+							`;
+							customerTableBody.appendChild(row);
+						});
+						
+						// Düzenleme ve silme butonlarına olaylar ekle
+						document.querySelectorAll('.edit-customer-btn').forEach(btn => {
+							btn.addEventListener('click', function() {
+								const id = parseInt(this.getAttribute('data-id'));
+								editCustomer(id);
+							});
+						});
+						
+						document.querySelectorAll('.delete-customer-btn').forEach(btn => {
+							btn.addEventListener('click', function() {
+								const id = parseInt(this.getAttribute('data-id'));
+								showConfirm('Müşteriyi Sil', 'Bu müşteriyi silmek istediğinize emin misiniz?', () => {
+									deleteCustomer(id);
+								});
+							});
+						});
+					} catch (error) {
+						console.error("Müşteri tablosu güncellenirken hata:", error);
+						customerTableBody.innerHTML = `
+							<tr>
+								<td colspan="6" class="text-center text-danger">
+									Müşteri verileri yüklenirken hata: ${error.message}
+								</td>
+							</tr>
+						`;
+					}
+					
+					updateDataCounter();
+				}
+				
+				// Ürün tablosunu güncelleme
+				function refreshProductTable() {
+					console.log("Ürün tablosu güncelleniyor...");
+					
+					if (!productTableBody) {
+						console.error("Ürün tablosu bulunamadı!");
+						return;
+					}
+					
+					productTableBody.innerHTML = '';
+					
+					try {
+						const products = InvoiceDB.products.getAll();
+						console.log(`${products.length} ürün bulundu.`);
+						
+						if (products.length === 0) {
+							productTableBody.innerHTML = `<tr><td colspan="6" class="text-center">Henüz ürün eklenmemiş.</td></tr>`;
+							return;
+						}
+						
+						products.forEach(product => {
+							// Kategori için badge sınıfı belirle
+							let categoryBadgeClass = 'bg-secondary';
+							if (product.category === 'Rainbo Series') categoryBadgeClass = 'bg-warning text-dark';
+							else if (product.category === 'Laser Series') categoryBadgeClass = 'bg-primary';
+							else if (product.category === 'Combine Series') categoryBadgeClass = 'bg-success';
+							else if (product.category === 'Mould') categoryBadgeClass = 'bg-purple';
+							
+							const row = document.createElement('tr');
+							row.innerHTML = `
+								<td>${product.id}</td>
+								<td>${escapeHtml(product.name || '')}</td>
+								<td>${escapeHtml(product.description || '')}</td>
+								<td>${escapeHtml(product.image || '')}</td>
+								<td><span class="badge ${categoryBadgeClass}">${escapeHtml(product.category || 'Other')}</span></td>
+								<td>
+									<button class="btn btn-sm btn-primary edit-product-btn" data-id="${product.id}">
+										<i class="fas fa-edit"></i>
+									</button>
+									<button class="btn btn-sm btn-danger delete-product-btn ms-2" data-id="${product.id}">
+										<i class="fas fa-trash"></i>
+									</button>
+								</td>
+							`;
+							productTableBody.appendChild(row);
+						});
+						
+						// Düzenleme ve silme butonlarına olaylar ekle
+						document.querySelectorAll('.edit-product-btn').forEach(btn => {
+							btn.addEventListener('click', function() {
+								const id = parseInt(this.getAttribute('data-id'));
+								editProduct(id);
+							});
+						});
+						
+						document.querySelectorAll('.delete-product-btn').forEach(btn => {
+							btn.addEventListener('click', function() {
+								const id = parseInt(this.getAttribute('data-id'));
+								showConfirm('Ürünü Sil', 'Bu ürünü silmek istediğinize emin misiniz?', () => {
+									deleteProduct(id);
+								});
+							});
+						});
+					} catch (error) {
+						console.error("Ürün tablosu güncellenirken hata:", error);
+						productTableBody.innerHTML = `
+							<tr>
+								<td colspan="6" class="text-center text-danger">
+									Ürün verileri yüklenirken hata: ${error.message}
+								</td>
+							</tr>
+						`;
+					}
+					
+					updateDataCounter();
+				}
+				
+				// Müşteri düzenleme
+				function editCustomer(id) {
+					console.log(`Müşteri düzenleniyor: ${id}`);
+					
+					try {
+						const customer = InvoiceDB.customers.get(id);
+						if (!customer) {
+							console.error(`${id} ID'li müşteri bulunamadı!`);
+							return;
+						}
+						
+						// Modal başlığı güncelleme
+						const modalTitle = document.getElementById('customer-modal-title');
+						if (modalTitle) modalTitle.textContent = 'Müşteri Düzenle';
+						
+						// Form alanlarını doldurma
+						if (customerIdInput) customerIdInput.value = customer.id;
+						if (customerNameInput) customerNameInput.value = customer.name || '';
+						if (customerAddressInput) customerAddressInput.value = customer.address || '';
+						if (customerEmailInput) customerEmailInput.value = customer.email || '';
+						if (customerPhoneInput) customerPhoneInput.value = customer.phone || '';
+						if (customerNotesInput) customerNotesInput.value = customer.notes || '';
+						
+						// Modalı gösterme
+						customerModal.show();
+					} catch (error) {
+						console.error(`Müşteri düzenlenirken hata: ${error.message}`);
+						alert(`Müşteri düzenlenirken bir hata oluştu: ${error.message}`);
+					}
+				}
+				
+				// Müşteri silme
+				function deleteCustomer(id) {
+					console.log(`Müşteri siliniyor: ${id}`);
+					
+					try {
+						InvoiceDB.customers.delete(id);
+						console.log(`${id} ID'li müşteri silindi.`);
+						refreshCustomerTable();
+					} catch (error) {
+						console.error(`Müşteri silinirken hata: ${error.message}`);
+						alert(`Müşteri silinirken bir hata oluştu: ${error.message}`);
+					}
+				}
+				
+				// Ürün düzenleme
+				function editProduct(id) {
+					console.log(`Ürün düzenleniyor: ${id}`);
+					
+					try {
+						const product = InvoiceDB.products.get(id);
+						if (!product) {
+							console.error(`${id} ID'li ürün bulunamadı!`);
+							return;
+						}
+						
+						// Modal başlığı güncelleme
+						const modalTitle = document.getElementById('product-modal-title');
+						if (modalTitle) modalTitle.textContent = 'Ürün Düzenle';
+						
+						// Form alanlarını doldurma
+						if (productIdInput) productIdInput.value = product.id;
+						if (productNameInput) productNameInput.value = product.name || '';
+						if (productDescInput) productDescInput.value = product.description || '';
+						if (productImageInput) productImageInput.value = product.image || '';
+						if (productCategoryInput) {
+							if (product.category && productCategoryInput.querySelector(`option[value="${product.category}"]`)) {
+								productCategoryInput.value = product.category;
+							} else {
+								productCategoryInput.value = 'Other';
+							}
+						}
+						
+						// Modalı gösterme
+						productModal.show();
+					} catch (error) {
+						console.error(`Ürün düzenlenirken hata: ${error.message}`);
+						alert(`Ürün düzenlenirken bir hata oluştu: ${error.message}`);
+					}
+				}
+				
+				// Ürün silme
+				function deleteProduct(id) {
+					console.log(`Ürün siliniyor: ${id}`);
+					
+					try {
+						InvoiceDB.products.delete(id);
+						console.log(`${id} ID'li ürün silindi.`);
+						refreshProductTable();
+					} catch (error) {
+						console.error(`Ürün silinirken hata: ${error.message}`);
+						alert(`Ürün silinirken bir hata oluştu: ${error.message}`);
+					}
+				}
+				
+				// Onay modalı gösterme
+				function showConfirm(title, message, callback) {
+					const titleEl = document.getElementById('confirm-modal-title');
+					const bodyEl = document.getElementById('confirm-modal-body');
+					
+					if (titleEl) titleEl.textContent = title;
+					if (bodyEl) bodyEl.textContent = message;
+					
+					// Onayla butonu için olay dinleyicisi
+					const originalCallback = confirmActionBtn.onclick;
+					confirmActionBtn.onclick = function() {
+						if (typeof callback === 'function') {
+							callback();
+						}
+						
+						confirmModal.hide();
+						confirmActionBtn.onclick = originalCallback;
+					};
+					
+					confirmModal.show();
+				}
+				
+				// JSON verilerini indirme yardımcı fonksiyonu
+				function downloadJSON(data, filename) {
+					const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+					const url = URL.createObjectURL(blob);
+					const a = document.createElement('a');
+					a.href = url;
+					a.download = filename;
+					document.body.appendChild(a);
+					a.click();
+					document.body.removeChild(a);
+					URL.revokeObjectURL(url);
+				}
+				
+				// HTML öğelerini güvenli şekilde manipüle etmek için
+				function escapeHtml(unsafe) {
+					if (typeof unsafe !== 'string') return '';
+					return unsafe
+						.replace(/&/g, "&amp;")
+						.replace(/</g, "&lt;")
+						.replace(/>/g, "&gt;")
+						.replace(/"/g, "&quot;")
+						.replace(/'/g, "&#039;");
+				}
+				
+				// Event Listeners
+				// Yeni müşteri ekleme butonları
+				if (addCustomerBtn) {
+					addCustomerBtn.addEventListener('click', function() {
+						// Modal başlığını güncelle
+						const modalTitle = document.getElementById('customer-modal-title');
+						if (modalTitle) modalTitle.textContent = 'Yeni Müşteri Ekle';
+						
+						// Form alanlarını temizle
+						if (customerForm) customerForm.reset();
+						if (customerIdInput) customerIdInput.value = '';
+						
+						// Modalı göster
+						customerModal.show();
+					});
+				}
+				
+				if (addNewCustomerBtn) {
+					addNewCustomerBtn.addEventListener('click', function() {
+						// Modal başlığını güncelle
+						const modalTitle = document.getElementById('customer-modal-title');
+						if (modalTitle) modalTitle.textContent = 'Yeni Müşteri Ekle';
+						
+						// Form alanlarını temizle
+						if (customerForm) customerForm.reset();
+						if (customerIdInput) customerIdInput.value = '';
+						
+						// Modalı göster
+						customerModal.show();
+					});
+				}
+				
+				// Yeni ürün ekleme butonları
+				if (addProductBtn) {
+					addProductBtn.addEventListener('click', function() {
+						// Modal başlığını güncelle
+						const modalTitle = document.getElementById('product-modal-title');
+						if (modalTitle) modalTitle.textContent = 'Yeni Ürün Ekle';
+						
+						// Form alanlarını temizle
+						if (productForm) productForm.reset();
+						if (productIdInput) productIdInput.value = '';
+						if (productImageInput) productImageInput.value = 'images/product.jpg';
+						
+						// Modalı göster
+						productModal.show();
+					});
+				}
+				
+				if (addNewProductBtn) {
+					addNewProductBtn.addEventListener('click', function() {
+						// Modal başlığını güncelle
+						const modalTitle = document.getElementById('product-modal-title');
+						if (modalTitle) modalTitle.textContent = 'Yeni Ürün Ekle';
+						
+						// Form alanlarını temizle
+						if (productForm) productForm.reset();
+						if (productIdInput) productIdInput.value = '';
+						if (productImageInput) productImageInput.value = 'images/product.jpg';
+						
+						// Modalı göster
+						productModal.show();
+					});
+				}
+				
+				// Müşteri kaydetme
+				if (saveCustomerBtn) {
+					saveCustomerBtn.addEventListener('click', function() {
+						console.log("Müşteri kaydediliyor...");
+						
+						// Form doğrulama
+						if (!customerNameInput || !customerNameInput.value || !customerAddressInput || !customerAddressInput.value) {
+							alert('İsim ve adres alanları zorunludur!');
+							return;
+						}
+						
+						try {
+							const customerData = {
+								name: customerNameInput.value,
+								address: customerAddressInput.value,
+								email: customerEmailInput ? customerEmailInput.value : '',
+								phone: customerPhoneInput ? customerPhoneInput.value : '',
+								notes: customerNotesInput ? customerNotesInput.value : ''
+							};
+							
+							const id = customerIdInput && customerIdInput.value ? parseInt(customerIdInput.value) : null;
+							
+							if (id) {
+								// Mevcut müşteriyi güncelleme
+								InvoiceDB.customers.update(id, customerData);
+								console.log(`Müşteri güncellendi: ID ${id}`);
+							} else {
+								// Yeni müşteri ekleme
+								const newCustomer = InvoiceDB.customers.add(customerData);
+								console.log(`Yeni müşteri eklendi: ID ${newCustomer.id}`);
+							}
+							
+							// Modalı kapat ve tabloyu güncelle
+							customerModal.hide();
+							refreshCustomerTable();
+						} catch (error) {
+							console.error(`Müşteri kaydedilirken hata: ${error.message}`);
+							alert(`Müşteri kaydedilirken bir hata oluştu: ${error.message}`);
+						}
+					});
+				}
+				
+				// Ürün kaydetme
+				if (saveProductBtn) {
+					saveProductBtn.addEventListener('click', function() {
+						console.log("Ürün kaydediliyor...");
+						
+						// Form doğrulama
+						if (!productNameInput || !productNameInput.value || !productDescInput || !productDescInput.value) {
+							alert('Ürün adı ve açıklama alanları zorunludur!');
+							return;
+						}
+						
+						try {
+							const productData = {
+								name: productNameInput.value,
+								description: productDescInput.value,
+								image: productImageInput ? productImageInput.value : 'images/product.jpg',
+								category: productCategoryInput ? productCategoryInput.value : 'Other'
+							};
+							
+							const id = productIdInput && productIdInput.value ? parseInt(productIdInput.value) : null;
+							
+							if (id) {
+								// Mevcut ürünü güncelleme
+								InvoiceDB.products.update(id, productData);
+								console.log(`Ürün güncellendi: ID ${id}`);
+							} else {
+								// Yeni ürün ekleme
+								const newProduct = InvoiceDB.products.add(productData);
+								console.log(`Yeni ürün eklendi: ID ${newProduct.id}`);
+							}
+							
+							// Modalı kapat ve tabloyu güncelle
+							productModal.hide();
+							refreshProductTable();
+						} catch (error) {
+							console.error(`Ürün kaydedilirken hata: ${error.message}`);
+							alert(`Ürün kaydedilirken bir hata oluştu: ${error.message}`);
+						}
+					});
+				}
+				
+				// Veri dışa aktarma işlemleri
+				if (exportAllBtn) {
+					exportAllBtn.addEventListener('click', function() {
+						console.log("Tüm veriler dışa aktarılıyor...");
+						try {
+							const data = {
+								customers: InvoiceDB.customers.getAll(),
+								products: InvoiceDB.products.getAll(),
+								invoices: InvoiceDB.invoices ? InvoiceDB.invoices.getAll() : []
+							};
+							
+							downloadJSON(data, 'invoice-data-backup.json');
+						} catch (error) {
+							console.error(`Veriler dışa aktarılırken hata: ${error.message}`);
+							alert(`Veriler dışa aktarılırken bir hata oluştu: ${error.message}`);
+						}
+					});
+				}
+				
+				if (exportAllBtn2) {
+					exportAllBtn2.addEventListener('click', function() {
+						console.log("Tüm veriler dışa aktarılıyor (2)...");
+						try {
+							const data = {
+								customers: InvoiceDB.customers.getAll(),
+								products: InvoiceDB.products.getAll(),
+								invoices: InvoiceDB.invoices ? InvoiceDB.invoices.getAll() : []
+							};
+							
+							downloadJSON(data, 'invoice-data-backup.json');
+						} catch (error) {
+							console.error(`Veriler dışa aktarılırken hata: ${error.message}`);
+							alert(`Veriler dışa aktarılırken bir hata oluştu: ${error.message}`);
+						}
+					});
+				}
+				
+				if (exportCustomersBtn) {
+					exportCustomersBtn.addEventListener('click', function() {
+						console.log("Müşteriler dışa aktarılıyor...");
+						try {
+							const customers = InvoiceDB.customers.getAll();
+							downloadJSON(customers, 'invoice-customers.json');
+						} catch (error) {
+							console.error(`Müşteriler dışa aktarılırken hata: ${error.message}`);
+							alert(`Müşteriler dışa aktarılırken bir hata oluştu: ${error.message}`);
+						}
+					});
+				}
+				
+				if (exportProductsBtn) {
+					exportProductsBtn.addEventListener('click', function() {
+						console.log("Ürünler dışa aktarılıyor...");
+						try {
+							const products = InvoiceDB.products.getAll();
+							downloadJSON(products, 'invoice-products.json');
+						} catch (error) {
+							console.error(`Ürünler dışa aktarılırken hata: ${error.message}`);
+							alert(`Ürünler dışa aktarılırken bir hata oluştu: ${error.message}`);
+						}
+					});
+				}
+				
+				if (exportInvoicesBtn && InvoiceDB.invoices) {
+					exportInvoicesBtn.addEventListener('click', function() {
+						console.log("Faturalar dışa aktarılıyor...");
+						try {
+							const invoices = InvoiceDB.invoices.getAll();
+							downloadJSON(invoices, 'invoice-invoices.json');
+						} catch (error) {
+							console.error(`Faturalar dışa aktarılırken hata: ${error.message}`);
+							alert(`Faturalar dışa aktarılırken bir hata oluştu: ${error.message}`);
+						}
+					});
+				}
+				
+				// İçe aktarma dosyası seçimi
+				if (importFileInput) {
+					importFileInput.addEventListener('change', function() {
+						if (importDataBtn) {
+							importDataBtn.disabled = this.files.length === 0;
+						}
+					});
+				}
+				
+				// Verileri içe aktarma
+				if (importDataBtn) {
+					importDataBtn.addEventListener('click', function() {
+						console.log("Veriler içe aktarılıyor...");
+						if (!importFileInput || !importFileInput.files || !importFileInput.files[0]) {
+							alert('Lütfen bir JSON dosyası seçin!');
+							return;
+						}
+						
+						const file = importFileInput.files[0];
+						const reader = new FileReader();
+						
+						reader.onload = function(e) {
+							try {
+								const data = JSON.parse(e.target.result);
+								let importMessage = '';
+								
+								// Hangi verilerin yükleneceğini kontrol et
+								if (Array.isArray(data)) {
+									// Dosya sadece dizi içeriyorsa, müşteriler veya ürünler olabilir
+									if (data.length === 0) {
+										alert('Dosya boş!');
+										return;
+									}
+									
+									const firstItem = data[0];
+									if (firstItem && (firstItem.hasOwnProperty('email') || firstItem.hasOwnProperty('address'))) {
+										// Muhtemelen müşteri verisi
+										InvoiceDB.customers.data = data;
+										InvoiceDB.customers.saveToStorage();
+										refreshCustomerTable();
+										importMessage = 'Müşteri verileri başarıyla içe aktarıldı!';
+									} else if (firstItem && (firstItem.hasOwnProperty('description') || firstItem.hasOwnProperty('image'))) {
+										// Muhtemelen ürün verisi
+										InvoiceDB.products.data = data;
+										InvoiceDB.products.saveToStorage();
+										refreshProductTable();
+										importMessage = 'Ürün verileri başarıyla içe aktarıldı!';
+									} else {
+										alert('Veri formatı tanımlanamadı!');
+										return;
+									}
+								} else {
+									// Nesne verisi, muhtemelen tam yedekleme
+									let importedSomething = false;
+									
+									if (data.customers && Array.isArray(data.customers)) {
+										InvoiceDB.customers.data = data.customers;
+										InvoiceDB.customers.saveToStorage();
+										refreshCustomerTable();
+										importedSomething = true;
+										importMessage += '• Müşteri verileri başarıyla içe aktarıldı!\n';
+									}
+									
+									if (data.products && Array.isArray(data.products)) {
+										InvoiceDB.products.data = data.products;
+										InvoiceDB.products.saveToStorage();
+										refreshProductTable();
+										importedSomething = true;
+										importMessage += '• Ürün verileri başarıyla içe aktarıldı!\n';
+									}
+									
+									if (data.invoices && Array.isArray(data.invoices) && InvoiceDB.invoices) {
+										InvoiceDB.invoices.data = data.invoices;
+										InvoiceDB.invoices.saveToStorage();
+										importedSomething = true;
+										importMessage += '• Fatura verileri başarıyla içe aktarıldı!\n';
+									}
+									
+									if (!importedSomething) {
+										alert('İçe aktarılacak veri bulunamadı!');
+										return;
+									}
+								}
+								
+								// Dosya seçimini sıfırla
+								importFileInput.value = '';
+								importDataBtn.disabled = true;
+								
+								// Kullanıcıya bilgi ver
+								alert(importMessage);
+								
+							} catch (error) {
+								console.error(`Veri içe aktarma hatası: ${error.message}`);
+								alert(`Dosya içe aktarılırken bir hata oluştu: ${error.message}\nDoğru bir JSON dosyası seçtiğinize emin olun.`);
+							}
+						};
+						
+						reader.onerror = function() {
+							console.error("Dosya okuma hatası!");
+							alert('Dosya okunurken bir hata oluştu!');
+						};
+						
+						reader.readAsText(file);
+					});
+				}
+				
+				// Veri temizleme işlemleri
+				if (clearCustomersBtn) {
+					clearCustomersBtn.addEventListener('click', function() {
+						showConfirm(
+							'Müşterileri Temizle', 
+							'TÜM MÜŞTERİ VERİLERİNİ SİLMEK İSTEDİĞİNİZE EMİN MİSİNİZ? Bu işlem geri alınamaz!',
+							function() {
+								try {
+									InvoiceDB.customers.data = [];
+									InvoiceDB.customers.saveToStorage();
+									refreshCustomerTable();
+									alert('Tüm müşteri verileri temizlendi!');
+								} catch (error) {
+									console.error(`Müşteri verileri temizlenirken hata: ${error.message}`);
+									alert(`Müşteri verileri temizlenirken bir hata oluştu: ${error.message}`);
+								}
+							}
+						);
+					});
+				}
+				
+				if (clearProductsBtn) {
+					clearProductsBtn.addEventListener('click', function() {
+						showConfirm(
+							'Ürünleri Temizle', 
+							'TÜM ÜRÜN VERİLERİNİ SİLMEK İSTEDİĞİNİZE EMİN MİSİNİZ? Bu işlem geri alınamaz!',
+							function() {
+								try {
+									InvoiceDB.products.data = [];
+									InvoiceDB.products.saveToStorage();
+									refreshProductTable();
+									alert('Tüm ürün verileri temizlendi!');
+								} catch (error) {
+									console.error(`Ürün verileri temizlenirken hata: ${error.message}`);
+									alert(`Ürün verileri temizlenirken bir hata oluştu: ${error.message}`);
+								}
+							}
+						);
+					});
+				}
+				
+				if (clearAllBtn) {
+					clearAllBtn.addEventListener('click', function() {
+						showConfirm(
+							'Tüm Verileri Temizle', 
+							'TÜM VERİTABANI VERİLERİNİ SİLMEK İSTEDİĞİNİZE EMİN MİSİNİZ? Bu işlem geri alınamaz!',
+							function() {
+								try {
+									InvoiceDB.customers.data = [];
+									InvoiceDB.customers.saveToStorage();
+									
+									InvoiceDB.products.data = [];
+									InvoiceDB.products.saveToStorage();
+									
+									if (InvoiceDB.invoices) {
+										InvoiceDB.invoices.data = [];
+										InvoiceDB.invoices.saveToStorage();
+									}
+									
+									refreshCustomerTable();
+									refreshProductTable();
+									
+									alert('Tüm veritabanı verileri temizlendi!');
+								} catch (error) {
+									console.error(`Veriler temizlenirken hata: ${error.message}`);
+									alert(`Veriler temizlenirken bir hata oluştu: ${error.message}`);
+								}
+							}
+						);
+					});
+				}
+				
+				// Tabloları yükle
+				refreshCustomerTable();
+				refreshProductTable();
+				
+				console.log("Veri yönetimi uygulaması başarıyla başlatıldı.");
+			}
+		});
+	</script>
+</body>
+</html>
